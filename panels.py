@@ -84,9 +84,8 @@ def _connect_section() -> ui.UINode:
                 ]),
                 ui.Stack(direction="v", gap=1, align="stretch", children=[
                     ui.Text("API Key", variant="caption"),
-                    ui.Input(param_name="api_key",
-                             placeholder="mk_test_... (sandbox) or mk_live_... (production)",
-                             secret=True),
+                    ui.Password(param_name="api_key",
+                                placeholder="mk_test_... (sandbox) or mk_live_... (production)"),
                 ]),
                 ui.Stack(direction="v", gap=1, align="stretch", children=[
                     ui.Text("Label (optional)", variant="caption"),

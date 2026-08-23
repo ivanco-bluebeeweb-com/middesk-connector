@@ -1,0 +1,4016 @@
+{
+  "manifest_schema_version": 3,
+  "sdk_version": "5.9.12",
+  "app_id": "middesk-connector",
+  "version": "0.1.0",
+  "name": "Middesk",
+  "description": "Connect your own Middesk account to run KYB (Know Your Business) verification end to end: create Businesses and Orders (identity, TIN, watchlist/sanctions, industry classification, web presence, risk), read Review/Review Tasks, timeline, signals, liens, Secretary of State registrations, TIN match, websites, and documents, set up ongoing Monitors and Monitor Events, register webhooks, run Entity Management payroll-tax registrations, and drive Middesk's AI verification Agents. Uses your own Middesk API key -- nothing is hosted or proxied by Imperal beyond the request itself.",
+  "icon": "icon.svg",
+  "actions_explicit": true,
+  "system": false,
+  "capabilities": [
+    "middesk:read",
+    "middesk:write"
+  ],
+  "tools": [
+    {
+      "name": "connect_middesk",
+      "description": "Connect your own Middesk account by saving an API key for a chosen environment (sandbox or production), after checking it actually works.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "api_key": {
+            "description": "Your Middesk API key (mk_test_... for sandbox, mk_live_... for production).",
+            "title": "Api Key",
+            "type": "string"
+          },
+          "environment": {
+            "default": "sandbox",
+            "description": "Which Middesk environment this key belongs to: 'sandbox' or 'production'.",
+            "title": "Environment",
+            "type": "string"
+          },
+          "label": {
+            "default": "",
+            "description": "Optional friendly label for this connection, e.g. 'Underwriting prod'.",
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "api_key"
+        ],
+        "title": "ConnectMiddeskParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "environment": {
+            "title": "Environment",
+            "type": "string"
+          },
+          "masked_api_key": {
+            "title": "Masked Api Key",
+            "type": "string"
+          },
+          "connected_at": {
+            "default": "",
+            "title": "Connected At",
+            "type": "string"
+          },
+          "status": {
+            "default": "connected",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "environment",
+          "masked_api_key"
+        ],
+        "title": "MiddeskConnection",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "disconnect_middesk",
+      "description": "Disconnect a Middesk account: deletes the saved API key. Nothing in Middesk itself is changed.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which saved connection to disconnect. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          }
+        },
+        "title": "DisconnectMiddeskParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "deleted": {
+            "default": true,
+            "title": "Deleted",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "DeleteResult",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "list_connections",
+      "description": "List the connected Middesk accounts and whether each saved API key still works.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "description": "Marker for chat functions that take no arguments.",
+        "properties": {},
+        "title": "NoParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "MiddeskConnection": {
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "label": {
+                "title": "Label",
+                "type": "string"
+              },
+              "environment": {
+                "title": "Environment",
+                "type": "string"
+              },
+              "masked_api_key": {
+                "title": "Masked Api Key",
+                "type": "string"
+              },
+              "connected_at": {
+                "default": "",
+                "title": "Connected At",
+                "type": "string"
+              },
+              "status": {
+                "default": "connected",
+                "title": "Status",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "label",
+              "environment",
+              "masked_api_key"
+            ],
+            "title": "MiddeskConnection",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "connections": {
+            "items": {
+              "$ref": "#/$defs/MiddeskConnection"
+            },
+            "title": "Connections",
+            "type": "array"
+          }
+        },
+        "title": "MiddeskConnectionList",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "create_business",
+      "description": "Create a new Business in Middesk to start KYB verification -- name plus optional TIN/address/website, and optionally kick off verification products (orders) immediately.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "name": {
+            "description": "Legal business name to verify, e.g. 'Acme Corporation'.",
+            "title": "Name",
+            "type": "string"
+          },
+          "tin": {
+            "default": "",
+            "description": "Business Tax ID / EIN, e.g. '12-3456789'. Improves match accuracy.",
+            "title": "Tin",
+            "type": "string"
+          },
+          "addresses_json": {
+            "default": "",
+            "description": "JSON array of address objects, e.g. '[{\"address_line1\":\"123 Main St\",\"city\":\"Austin\",\"state\":\"TX\",\"postal_code\":\"78701\"}]'.",
+            "title": "Addresses Json",
+            "type": "string"
+          },
+          "website": {
+            "default": "",
+            "description": "Business website URL, e.g. 'https://acme.com'.",
+            "title": "Website",
+            "type": "string"
+          },
+          "external_id": {
+            "default": "",
+            "description": "Your own internal id for this business, for cross-referencing later.",
+            "title": "External Id",
+            "type": "string"
+          },
+          "order_types_json": {
+            "default": "",
+            "description": "JSON array of Middesk order product names to run immediately, e.g. '[\"identity\",\"tin\",\"watchlist\"]'. Leave empty to create the business without ordering yet.",
+            "title": "Order Types Json",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "CreateBusinessParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "object": {
+            "default": "business",
+            "title": "Object",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "created_at": {
+            "default": "",
+            "title": "Created At",
+            "type": "string"
+          },
+          "updated_at": {
+            "default": "",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "external_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "External Id"
+          },
+          "tin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tin"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Website"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "review_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Review Id"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "status"
+        ],
+        "title": "BusinessEntity",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "update_business",
+      "description": "Update selected fields of an existing Business (name/TIN/external_id/tags). Only given fields change.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "business_id": {
+            "description": "The Middesk business id to update, e.g. 'business_abc123'.",
+            "title": "Business Id",
+            "type": "string"
+          },
+          "name": {
+            "default": "",
+            "description": "Corrected legal business name, if it needs fixing.",
+            "title": "Name",
+            "type": "string"
+          },
+          "tin": {
+            "default": "",
+            "description": "Corrected Tax ID / EIN, if it needs fixing.",
+            "title": "Tin",
+            "type": "string"
+          },
+          "external_id": {
+            "default": "",
+            "description": "Updated internal id for cross-referencing.",
+            "title": "External Id",
+            "type": "string"
+          },
+          "tags_json": {
+            "default": "",
+            "description": "JSON array of string tags to set on this business, e.g. '[\"high-risk\",\"reviewed\"]'.",
+            "title": "Tags Json",
+            "type": "string"
+          }
+        },
+        "required": [
+          "business_id"
+        ],
+        "title": "UpdateBusinessParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "object": {
+            "default": "business",
+            "title": "Object",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "created_at": {
+            "default": "",
+            "title": "Created At",
+            "type": "string"
+          },
+          "updated_at": {
+            "default": "",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "external_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "External Id"
+          },
+          "tin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tin"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Website"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "review_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Review Id"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "status"
+        ],
+        "title": "BusinessEntity",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "get_business",
+      "description": "Read one Business in full: verification status, TIN, tags, and its review id.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "business_id": {
+            "description": "The Middesk business id to read, e.g. 'business_abc123'.",
+            "title": "Business Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "business_id"
+        ],
+        "title": "GetBusinessParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "object": {
+            "default": "business",
+            "title": "Object",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "created_at": {
+            "default": "",
+            "title": "Created At",
+            "type": "string"
+          },
+          "updated_at": {
+            "default": "",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "external_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "External Id"
+          },
+          "tin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tin"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Website"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "review_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Review Id"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "status"
+        ],
+        "title": "BusinessEntity",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "list_businesses",
+      "description": "List Businesses in the connected Middesk account, optionally filtered by verification status.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "status": {
+            "default": "",
+            "description": "Filter by verification status: open, pending, in_audit, in_review, approved, or rejected. Leave empty for all.",
+            "title": "Status",
+            "type": "string"
+          },
+          "limit": {
+            "default": 25,
+            "description": "Maximum number of businesses to return.",
+            "title": "Limit",
+            "type": "integer"
+          }
+        },
+        "title": "ListBusinessesParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "BusinessEntity": {
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "object": {
+                "default": "business",
+                "title": "Object",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "status": {
+                "title": "Status",
+                "type": "string"
+              },
+              "created_at": {
+                "default": "",
+                "title": "Created At",
+                "type": "string"
+              },
+              "updated_at": {
+                "default": "",
+                "title": "Updated At",
+                "type": "string"
+              },
+              "external_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "External Id"
+              },
+              "tin": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Tin"
+              },
+              "website": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Website"
+              },
+              "tags": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Tags",
+                "type": "array"
+              },
+              "review_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Review Id"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "status"
+            ],
+            "title": "BusinessEntity",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "businesses": {
+            "items": {
+              "$ref": "#/$defs/BusinessEntity"
+            },
+            "title": "Businesses",
+            "type": "array"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "title": "BusinessList",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "list_business_timeline",
+      "description": "Read the event timeline of one Business -- every status change and verification milestone in order.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "business_id": {
+            "description": "The Middesk business id whose event timeline you want to read.",
+            "title": "Business Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "business_id"
+        ],
+        "title": "ListBusinessTimelineParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "TimelineEvent": {
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "type": {
+                "title": "Type",
+                "type": "string"
+              },
+              "created_at": {
+                "title": "Created At",
+                "type": "string"
+              },
+              "data_summary": {
+                "default": "",
+                "title": "Data Summary",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "type",
+              "created_at"
+            ],
+            "title": "TimelineEvent",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/$defs/TimelineEvent"
+            },
+            "title": "Events",
+            "type": "array"
+          }
+        },
+        "title": "TimelineEventList",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "create_order",
+      "description": "Order one or more verification products (e.g. identity, tin, watchlist, industry_classification, web_presence, risk) against an existing Business.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "business_id": {
+            "description": "The Middesk business id to order verification products for.",
+            "title": "Business Id",
+            "type": "string"
+          },
+          "order_types_json": {
+            "description": "JSON array of product names to order, e.g. '[\"identity\",\"tin\",\"watchlist\",\"industry_classification\",\"web_presence\",\"risk\"]'.",
+            "title": "Order Types Json",
+            "type": "string"
+          }
+        },
+        "required": [
+          "business_id",
+          "order_types_json"
+        ],
+        "title": "CreateOrderParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "object": {
+            "default": "order",
+            "title": "Object",
+            "type": "string"
+          },
+          "business_id": {
+            "default": "",
+            "title": "Business Id",
+            "type": "string"
+          },
+          "status": {
+            "default": "",
+            "title": "Status",
+            "type": "string"
+          },
+          "order_types": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Order Types",
+            "type": "array"
+          },
+          "created_at": {
+            "default": "",
+            "title": "Created At",
+            "type": "string"
+          },
+          "updated_at": {
+            "default": "",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "OrderEntity",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "get_order",
+      "description": "Read one verification Order in full -- its status and which products were requested.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "business_id": {
+            "description": "The Middesk business id the order belongs to.",
+            "title": "Business Id",
+            "type": "string"
+          },
+          "order_id": {
+            "description": "The Middesk order id to read.",
+            "title": "Order Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "business_id",
+          "order_id"
+        ],
+        "title": "GetOrderParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "object": {
+            "default": "order",
+            "title": "Object",
+            "type": "string"
+          },
+          "business_id": {
+            "default": "",
+            "title": "Business Id",
+            "type": "string"
+          },
+          "status": {
+            "default": "",
+            "title": "Status",
+            "type": "string"
+          },
+          "order_types": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Order Types",
+            "type": "array"
+          },
+          "created_at": {
+            "default": "",
+            "title": "Created At",
+            "type": "string"
+          },
+          "updated_at": {
+            "default": "",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "OrderEntity",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "list_orders",
+      "description": "List every verification Order placed against one Business.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "business_id": {
+            "description": "The Middesk business id whose orders you want to list.",
+            "title": "Business Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "business_id"
+        ],
+        "title": "ListOrdersParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "OrderEntity": {
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "object": {
+                "default": "order",
+                "title": "Object",
+                "type": "string"
+              },
+              "business_id": {
+                "default": "",
+                "title": "Business Id",
+                "type": "string"
+              },
+              "status": {
+                "default": "",
+                "title": "Status",
+                "type": "string"
+              },
+              "order_types": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Order Types",
+                "type": "array"
+              },
+              "created_at": {
+                "default": "",
+                "title": "Created At",
+                "type": "string"
+              },
+              "updated_at": {
+                "default": "",
+                "title": "Updated At",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "title": "OrderEntity",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "orders": {
+            "items": {
+              "$ref": "#/$defs/OrderEntity"
+            },
+            "title": "Orders",
+            "type": "array"
+          }
+        },
+        "title": "OrderList",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "get_review",
+      "description": "Read a Business's Review in full -- overall status plus every Review Task (category, key, and outcome) that fed into the verification decision.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "business_id": {
+            "description": "The Middesk business id whose review you want to read.",
+            "title": "Business Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "business_id"
+        ],
+        "title": "GetReviewParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "ReviewTask": {
+            "properties": {
+              "category": {
+                "title": "Category",
+                "type": "string"
+              },
+              "key": {
+                "title": "Key",
+                "type": "string"
+              },
+              "label": {
+                "default": "",
+                "title": "Label",
+                "type": "string"
+              },
+              "status": {
+                "default": "",
+                "title": "Status",
+                "type": "string"
+              }
+            },
+            "required": [
+              "category",
+              "key"
+            ],
+            "title": "ReviewTask",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "object": {
+            "default": "review",
+            "title": "Object",
+            "type": "string"
+          },
+          "business_id": {
+            "default": "",
+            "title": "Business Id",
+            "type": "string"
+          },
+          "created_at": {
+            "default": "",
+            "title": "Created At",
+            "type": "string"
+          },
+          "updated_at": {
+            "default": "",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/$defs/ReviewTask"
+            },
+            "title": "Tasks",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "ReviewEntity",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "list_review_insights",
+      "description": "Read consolidated, human-readable Review Insights for a Business -- Middesk's own summarized findings across every verification category.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "business_id": {
+            "description": "The Middesk business id whose consolidated insights you want to read.",
+            "title": "Business Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "business_id"
+        ],
+        "title": "ListReviewInsightsParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "ReviewInsight": {
+            "properties": {
+              "category": {
+                "title": "Category",
+                "type": "string"
+              },
+              "summary": {
+                "default": "",
+                "title": "Summary",
+                "type": "string"
+              },
+              "severity": {
+                "default": "",
+                "title": "Severity",
+                "type": "string"
+              }
+            },
+            "required": [
+              "category"
+            ],
+            "title": "ReviewInsight",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "insights": {
+            "items": {
+              "$ref": "#/$defs/ReviewInsight"
+            },
+            "title": "Insights",
+            "type": "array"
+          }
+        },
+        "title": "ReviewInsightList",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "create_monitor",
+      "description": "Subscribe a Business to ongoing monitoring -- Middesk continuously re-checks it for SOS deactivation, new watchlist/sanctions hits, and officer/registration changes after initial approval.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "business_id": {
+            "description": "The Middesk business id to start continuous monitoring on.",
+            "title": "Business Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "business_id"
+        ],
+        "title": "CreateMonitorParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "object": {
+            "default": "monitor",
+            "title": "Object",
+            "type": "string"
+          },
+          "business_id": {
+            "default": "",
+            "title": "Business Id",
+            "type": "string"
+          },
+          "status": {
+            "default": "",
+            "title": "Status",
+            "type": "string"
+          },
+          "created_at": {
+            "default": "",
+            "title": "Created At",
+            "type": "string"
+          },
+          "updated_at": {
+            "default": "",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "MonitorEntity",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "get_monitor",
+      "description": "Read a Business's Monitor status -- whether ongoing monitoring is currently active.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "business_id": {
+            "description": "The Middesk business id whose monitor you want to read.",
+            "title": "Business Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "business_id"
+        ],
+        "title": "GetMonitorParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "object": {
+            "default": "monitor",
+            "title": "Object",
+            "type": "string"
+          },
+          "business_id": {
+            "default": "",
+            "title": "Business Id",
+            "type": "string"
+          },
+          "status": {
+            "default": "",
+            "title": "Status",
+            "type": "string"
+          },
+          "created_at": {
+            "default": "",
+            "title": "Created At",
+            "type": "string"
+          },
+          "updated_at": {
+            "default": "",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "MonitorEntity",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "delete_monitor",
+      "description": "Stop ongoing monitoring for a Business. Cannot be undone -- create_monitor again to resume.",
+      "action_type": "destructive",
+      "chain_callable": true,
+      "effects": [
+        "delete:resource"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "business_id": {
+            "description": "The Middesk business id whose monitor you want to stop.",
+            "title": "Business Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "business_id"
+        ],
+        "title": "DeleteMonitorParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "deleted": {
+            "default": true,
+            "title": "Deleted",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "DeleteResult",
+        "type": "object"
+      },
+      "event": "middesk-connector.delete_monitor",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "list_monitor_events",
+      "description": "List events raised by ongoing monitoring for a Business -- e.g. a new watchlist hit or a Secretary of State status change detected after approval.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "business_id": {
+            "description": "The Middesk business id whose monitoring events you want to read.",
+            "title": "Business Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "business_id"
+        ],
+        "title": "ListMonitorEventsParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "MonitorEvent": {
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "type": {
+                "title": "Type",
+                "type": "string"
+              },
+              "created_at": {
+                "title": "Created At",
+                "type": "string"
+              },
+              "summary": {
+                "default": "",
+                "title": "Summary",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "type",
+              "created_at"
+            ],
+            "title": "MonitorEvent",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/$defs/MonitorEvent"
+            },
+            "title": "Events",
+            "type": "array"
+          }
+        },
+        "title": "MonitorEventList",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "list_liens",
+      "description": "List UCC and tax liens filed against a Business -- filing type, status, filing number/date, and jurisdiction.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "business_id": {
+            "description": "The Middesk business id whose UCC/tax liens you want to list.",
+            "title": "Business Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "business_id"
+        ],
+        "title": "ListLiensParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "LienEntity": {
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "object": {
+                "default": "lien",
+                "title": "Object",
+                "type": "string"
+              },
+              "lien_type": {
+                "default": "",
+                "title": "Lien Type",
+                "type": "string"
+              },
+              "status": {
+                "default": "",
+                "title": "Status",
+                "type": "string"
+              },
+              "filing_number": {
+                "default": "",
+                "title": "Filing Number",
+                "type": "string"
+              },
+              "filing_date": {
+                "default": "",
+                "title": "Filing Date",
+                "type": "string"
+              },
+              "jurisdiction": {
+                "default": "",
+                "title": "Jurisdiction",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "title": "LienEntity",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "liens": {
+            "items": {
+              "$ref": "#/$defs/LienEntity"
+            },
+            "title": "Liens",
+            "type": "array"
+          }
+        },
+        "title": "LienList",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "list_registrations",
+      "description": "List Secretary of State business registrations for a Business across every state it's registered in -- status, entity type, and standing.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "business_id": {
+            "description": "The Middesk business id whose Secretary of State registrations you want to list.",
+            "title": "Business Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "business_id"
+        ],
+        "title": "ListRegistrationsParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "RegistrationEntity": {
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "object": {
+                "default": "registration",
+                "title": "Object",
+                "type": "string"
+              },
+              "state": {
+                "default": "",
+                "title": "State",
+                "type": "string"
+              },
+              "status": {
+                "default": "",
+                "title": "Status",
+                "type": "string"
+              },
+              "entity_type": {
+                "default": "",
+                "title": "Entity Type",
+                "type": "string"
+              },
+              "registration_date": {
+                "default": "",
+                "title": "Registration Date",
+                "type": "string"
+              },
+              "standing": {
+                "default": "",
+                "title": "Standing",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "title": "RegistrationEntity",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "registrations": {
+            "items": {
+              "$ref": "#/$defs/RegistrationEntity"
+            },
+            "title": "Registrations",
+            "type": "array"
+          }
+        },
+        "title": "RegistrationList",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "get_tin",
+      "description": "Read the TIN/EIN match result for a Business -- whether the tax ID matches IRS records, and the TIN type.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "business_id": {
+            "description": "The Middesk business id whose TIN match result you want to read.",
+            "title": "Business Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "business_id"
+        ],
+        "title": "GetTinParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "object": {
+            "default": "tin",
+            "title": "Object",
+            "type": "string"
+          },
+          "tin": {
+            "default": "",
+            "title": "Tin",
+            "type": "string"
+          },
+          "tin_type": {
+            "default": "",
+            "title": "Tin Type",
+            "type": "string"
+          },
+          "match_result": {
+            "default": "",
+            "title": "Match Result",
+            "type": "string"
+          },
+          "matched_name": {
+            "default": "",
+            "title": "Matched Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "TinEntity",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "list_documents",
+      "description": "List documents Middesk has collected or generated for a Business (e.g. Secretary of State filings, formation documents).",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "business_id": {
+            "description": "The Middesk business id whose supporting documents you want to list.",
+            "title": "Business Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "business_id"
+        ],
+        "title": "ListDocumentsParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "DocumentEntity": {
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "object": {
+                "default": "document",
+                "title": "Object",
+                "type": "string"
+              },
+              "document_type": {
+                "default": "",
+                "title": "Document Type",
+                "type": "string"
+              },
+              "file_name": {
+                "default": "",
+                "title": "File Name",
+                "type": "string"
+              },
+              "created_at": {
+                "default": "",
+                "title": "Created At",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "title": "DocumentEntity",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "documents": {
+            "items": {
+              "$ref": "#/$defs/DocumentEntity"
+            },
+            "title": "Documents",
+            "type": "array"
+          }
+        },
+        "title": "DocumentList",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "list_websites",
+      "description": "List websites Middesk associated with a Business, with basic web-presence signals.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "business_id": {
+            "description": "The Middesk business id whose discovered/verified websites you want to list.",
+            "title": "Business Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "business_id"
+        ],
+        "title": "ListWebsitesParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "WebsiteEntity": {
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "object": {
+                "default": "website",
+                "title": "Object",
+                "type": "string"
+              },
+              "url": {
+                "default": "",
+                "title": "Url",
+                "type": "string"
+              },
+              "status": {
+                "default": "",
+                "title": "Status",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "title": "WebsiteEntity",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "websites": {
+            "items": {
+              "$ref": "#/$defs/WebsiteEntity"
+            },
+            "title": "Websites",
+            "type": "array"
+          }
+        },
+        "title": "WebsiteList",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "create_business_batch",
+      "description": "Submit several businesses to Middesk in one call (e.g. bulk-onboarding a portfolio of vendors), optionally kicking off the same verification products for every one of them.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "businesses_json": {
+            "description": "JSON array of business objects to submit together, e.g. '[{\"name\":\"Acme Corp\",\"tin\":\"12-3456789\"},{\"name\":\"Beta LLC\"}]'.",
+            "title": "Businesses Json",
+            "type": "string"
+          },
+          "order_types_json": {
+            "default": "",
+            "description": "JSON array of Middesk order product names to run on every business in the batch, e.g. '[\"identity\",\"watchlist\"]'. Leave empty to just create the businesses.",
+            "title": "Order Types Json",
+            "type": "string"
+          }
+        },
+        "required": [
+          "businesses_json"
+        ],
+        "title": "CreateBusinessBatchParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "object": {
+            "default": "business_batch",
+            "title": "Object",
+            "type": "string"
+          },
+          "status": {
+            "default": "",
+            "title": "Status",
+            "type": "string"
+          },
+          "business_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Business Ids",
+            "type": "array"
+          },
+          "created_at": {
+            "default": "",
+            "title": "Created At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "BatchEntity",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "get_business_batch",
+      "description": "Read one Business Batch's status -- which businesses it contains and whether processing is complete.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "batch_id": {
+            "description": "The Middesk business batch id to read.",
+            "title": "Batch Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "batch_id"
+        ],
+        "title": "GetBusinessBatchParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "object": {
+            "default": "business_batch",
+            "title": "Object",
+            "type": "string"
+          },
+          "status": {
+            "default": "",
+            "title": "Status",
+            "type": "string"
+          },
+          "business_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Business Ids",
+            "type": "array"
+          },
+          "created_at": {
+            "default": "",
+            "title": "Created At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "BatchEntity",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "list_signals",
+      "description": "List the raw risk signals Middesk has collected for a Business -- category, signal type, severity, and description behind each flag.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "business_id": {
+            "description": "The Middesk business id whose risk signals you want to list.",
+            "title": "Business Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "business_id"
+        ],
+        "title": "ListSignalsParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "SignalEntity": {
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "object": {
+                "default": "signal",
+                "title": "Object",
+                "type": "string"
+              },
+              "category": {
+                "default": "",
+                "title": "Category",
+                "type": "string"
+              },
+              "signal_type": {
+                "default": "",
+                "title": "Signal Type",
+                "type": "string"
+              },
+              "severity": {
+                "default": "",
+                "title": "Severity",
+                "type": "string"
+              },
+              "description": {
+                "default": "",
+                "title": "Description",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "title": "SignalEntity",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "signals": {
+            "items": {
+              "$ref": "#/$defs/SignalEntity"
+            },
+            "title": "Signals",
+            "type": "array"
+          }
+        },
+        "title": "SignalList",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "list_policy_results",
+      "description": "List automated ruleset/Policy decisions Middesk computed for a Business -- which policy fired and its outcome.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "business_id": {
+            "description": "The Middesk business id whose Policy (automated decisioning) results you want to list.",
+            "title": "Business Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "business_id"
+        ],
+        "title": "ListPolicyResultsParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "PolicyResultEntity": {
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "object": {
+                "default": "policy_result",
+                "title": "Object",
+                "type": "string"
+              },
+              "policy_name": {
+                "default": "",
+                "title": "Policy Name",
+                "type": "string"
+              },
+              "decision": {
+                "default": "",
+                "title": "Decision",
+                "type": "string"
+              },
+              "created_at": {
+                "default": "",
+                "title": "Created At",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "title": "PolicyResultEntity",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/$defs/PolicyResultEntity"
+            },
+            "title": "Results",
+            "type": "array"
+          }
+        },
+        "title": "PolicyResultList",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "create_action",
+      "description": "Manually trigger a Middesk action against a Business (e.g. force a re-verification) instead of waiting for scheduled monitoring.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "business_id": {
+            "description": "The Middesk business id to trigger the action against.",
+            "title": "Business Id",
+            "type": "string"
+          },
+          "action_type": {
+            "description": "The Middesk action type to trigger, e.g. 'reverify' or a documented action key for this business.",
+            "title": "Action Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "business_id",
+          "action_type"
+        ],
+        "title": "CreateActionParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "action_type": {
+            "title": "Action Type",
+            "type": "string"
+          },
+          "status": {
+            "default": "",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "business_id",
+          "action_type"
+        ],
+        "title": "ActionTriggerResult",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "create_webhook",
+      "description": "Register a new webhook endpoint so Middesk pushes verification lifecycle events (business updates, review completion, monitor hits) to your URL as they happen.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "url": {
+            "description": "Your HTTPS endpoint that will receive Middesk webhook events, e.g. 'https://yourapp.com/webhooks/middesk'.",
+            "title": "Url",
+            "type": "string"
+          },
+          "event_types_json": {
+            "default": "",
+            "description": "JSON array of event type names to subscribe to, e.g. '[\"business.updated\",\"review.completed\"]'. Leave empty to subscribe to all events.",
+            "title": "Event Types Json",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "CreateWebhookParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "object": {
+            "default": "webhook",
+            "title": "Object",
+            "type": "string"
+          },
+          "url": {
+            "default": "",
+            "title": "Url",
+            "type": "string"
+          },
+          "event_types": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Event Types",
+            "type": "array"
+          },
+          "status": {
+            "default": "",
+            "title": "Status",
+            "type": "string"
+          },
+          "created_at": {
+            "default": "",
+            "title": "Created At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "WebhookEntity",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "get_webhook",
+      "description": "Read one webhook subscription's full configuration by id.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "webhook_id": {
+            "description": "The Middesk webhook id to read.",
+            "title": "Webhook Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "webhook_id"
+        ],
+        "title": "GetWebhookParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "object": {
+            "default": "webhook",
+            "title": "Object",
+            "type": "string"
+          },
+          "url": {
+            "default": "",
+            "title": "Url",
+            "type": "string"
+          },
+          "event_types": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Event Types",
+            "type": "array"
+          },
+          "status": {
+            "default": "",
+            "title": "Status",
+            "type": "string"
+          },
+          "created_at": {
+            "default": "",
+            "title": "Created At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "WebhookEntity",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "list_webhooks",
+      "description": "List webhook subscriptions configured on the connected Middesk account.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          }
+        },
+        "title": "ListWebhooksParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "WebhookEntity": {
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "object": {
+                "default": "webhook",
+                "title": "Object",
+                "type": "string"
+              },
+              "url": {
+                "default": "",
+                "title": "Url",
+                "type": "string"
+              },
+              "event_types": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Event Types",
+                "type": "array"
+              },
+              "status": {
+                "default": "",
+                "title": "Status",
+                "type": "string"
+              },
+              "created_at": {
+                "default": "",
+                "title": "Created At",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "title": "WebhookEntity",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "webhooks": {
+            "items": {
+              "$ref": "#/$defs/WebhookEntity"
+            },
+            "title": "Webhooks",
+            "type": "array"
+          }
+        },
+        "title": "WebhookList",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "update_webhook",
+      "description": "Change an existing webhook's URL and/or subscribed event types. Only given fields change.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "webhook_id": {
+            "description": "The Middesk webhook id to update.",
+            "title": "Webhook Id",
+            "type": "string"
+          },
+          "url": {
+            "default": "",
+            "description": "New endpoint URL, if changing it.",
+            "title": "Url",
+            "type": "string"
+          },
+          "event_types_json": {
+            "default": "",
+            "description": "New JSON array of subscribed event type names, if changing it.",
+            "title": "Event Types Json",
+            "type": "string"
+          }
+        },
+        "required": [
+          "webhook_id"
+        ],
+        "title": "UpdateWebhookParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "object": {
+            "default": "webhook",
+            "title": "Object",
+            "type": "string"
+          },
+          "url": {
+            "default": "",
+            "title": "Url",
+            "type": "string"
+          },
+          "event_types": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Event Types",
+            "type": "array"
+          },
+          "status": {
+            "default": "",
+            "title": "Status",
+            "type": "string"
+          },
+          "created_at": {
+            "default": "",
+            "title": "Created At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "WebhookEntity",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "delete_webhook",
+      "description": "Permanently remove a webhook subscription. Cannot be undone.",
+      "action_type": "destructive",
+      "chain_callable": true,
+      "effects": [
+        "delete:resource"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "webhook_id": {
+            "description": "The Middesk webhook id to permanently remove.",
+            "title": "Webhook Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "webhook_id"
+        ],
+        "title": "DeleteWebhookParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "deleted": {
+            "default": true,
+            "title": "Deleted",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "DeleteResult",
+        "type": "object"
+      },
+      "event": "middesk-connector.delete_webhook",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "create_registration_request",
+      "description": "Create a payroll-tax Registration Request for a company in one or more jurisdictions (Entity Management -- separate from KYB Business Verification).",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "company_name": {
+            "description": "Legal employer name to register for payroll taxes.",
+            "title": "Company Name",
+            "type": "string"
+          },
+          "jurisdictions_json": {
+            "description": "JSON array of state/jurisdiction codes to register in, e.g. '[\"CA\",\"NY\",\"TX\"]'.",
+            "title": "Jurisdictions Json",
+            "type": "string"
+          },
+          "external_id": {
+            "default": "",
+            "description": "Your own internal id for this registration request.",
+            "title": "External Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "company_name",
+          "jurisdictions_json"
+        ],
+        "title": "CreateRegistrationRequestParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "object": {
+            "default": "registration_request",
+            "title": "Object",
+            "type": "string"
+          },
+          "company_name": {
+            "default": "",
+            "title": "Company Name",
+            "type": "string"
+          },
+          "status": {
+            "default": "",
+            "title": "Status",
+            "type": "string"
+          },
+          "jurisdictions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Jurisdictions",
+            "type": "array"
+          },
+          "created_at": {
+            "default": "",
+            "title": "Created At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "RegistrationRequestEntity",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "get_registration_request",
+      "description": "Read one payroll-tax Registration Request in full -- status and which jurisdictions it covers.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "registration_request_id": {
+            "description": "The Middesk registration request id to read.",
+            "title": "Registration Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "registration_request_id"
+        ],
+        "title": "GetRegistrationRequestParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "object": {
+            "default": "registration_request",
+            "title": "Object",
+            "type": "string"
+          },
+          "company_name": {
+            "default": "",
+            "title": "Company Name",
+            "type": "string"
+          },
+          "status": {
+            "default": "",
+            "title": "Status",
+            "type": "string"
+          },
+          "jurisdictions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Jurisdictions",
+            "type": "array"
+          },
+          "created_at": {
+            "default": "",
+            "title": "Created At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "RegistrationRequestEntity",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "list_registration_requests",
+      "description": "List payroll-tax Registration Requests on the connected Middesk Entity Management account.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "status": {
+            "default": "",
+            "description": "Filter by status, if known. Leave empty for all.",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "title": "ListRegistrationRequestsParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "RegistrationRequestEntity": {
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "object": {
+                "default": "registration_request",
+                "title": "Object",
+                "type": "string"
+              },
+              "company_name": {
+                "default": "",
+                "title": "Company Name",
+                "type": "string"
+              },
+              "status": {
+                "default": "",
+                "title": "Status",
+                "type": "string"
+              },
+              "jurisdictions": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Jurisdictions",
+                "type": "array"
+              },
+              "created_at": {
+                "default": "",
+                "title": "Created At",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "title": "RegistrationRequestEntity",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "registration_requests": {
+            "items": {
+              "$ref": "#/$defs/RegistrationRequestEntity"
+            },
+            "title": "Registration Requests",
+            "type": "array"
+          }
+        },
+        "title": "RegistrationRequestList",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "list_information_requests",
+      "description": "List Information Requests Middesk raised while processing a Registration Request -- follow-up questions that need answers before the state application can be filed.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "registration_request_id": {
+            "description": "The Middesk registration request id whose outstanding information requests you want to list.",
+            "title": "Registration Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "registration_request_id"
+        ],
+        "title": "ListInformationRequestsParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "InformationRequestEntity": {
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "object": {
+                "default": "information_request",
+                "title": "Object",
+                "type": "string"
+              },
+              "status": {
+                "default": "",
+                "title": "Status",
+                "type": "string"
+              },
+              "fields_needed": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Fields Needed",
+                "type": "array"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "title": "InformationRequestEntity",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "information_requests": {
+            "items": {
+              "$ref": "#/$defs/InformationRequestEntity"
+            },
+            "title": "Information Requests",
+            "type": "array"
+          }
+        },
+        "title": "InformationRequestList",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "answer_information_request",
+      "description": "Submit answers to an open Information Request so Middesk can continue filing the payroll-tax registration.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "information_request_id": {
+            "description": "The Middesk information request id you are answering.",
+            "title": "Information Request Id",
+            "type": "string"
+          },
+          "answers_json": {
+            "description": "JSON object mapping requested field names to their answer values, e.g. '{\"ein\":\"12-3456789\"}'.",
+            "title": "Answers Json",
+            "type": "string"
+          }
+        },
+        "required": [
+          "information_request_id",
+          "answers_json"
+        ],
+        "title": "AnswerInformationRequestParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "information_request_id": {
+            "title": "Information Request Id",
+            "type": "string"
+          },
+          "status": {
+            "default": "submitted",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "information_request_id"
+        ],
+        "title": "InformationRequestAnswerResult",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "list_jurisdictions",
+      "description": "List the state jurisdictions Middesk supports for payroll-tax registration.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          }
+        },
+        "title": "ListJurisdictionsParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "JurisdictionEntity": {
+            "properties": {
+              "code": {
+                "title": "Code",
+                "type": "string"
+              },
+              "name": {
+                "default": "",
+                "title": "Name",
+                "type": "string"
+              },
+              "registration_supported": {
+                "default": true,
+                "title": "Registration Supported",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "code"
+            ],
+            "title": "JurisdictionEntity",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "jurisdictions": {
+            "items": {
+              "$ref": "#/$defs/JurisdictionEntity"
+            },
+            "title": "Jurisdictions",
+            "type": "array"
+          }
+        },
+        "title": "JurisdictionList",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "list_mail",
+      "description": "List physical mail Middesk has received on your behalf from state agencies during a payroll-tax registration, optionally filtered to one Registration Request.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "registration_request_id": {
+            "default": "",
+            "description": "Filter mail to one registration request. Leave empty for all mail on the account.",
+            "title": "Registration Request Id",
+            "type": "string"
+          }
+        },
+        "title": "ListMailParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "MailEntity": {
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "object": {
+                "default": "mail",
+                "title": "Object",
+                "type": "string"
+              },
+              "subject": {
+                "default": "",
+                "title": "Subject",
+                "type": "string"
+              },
+              "received_at": {
+                "default": "",
+                "title": "Received At",
+                "type": "string"
+              },
+              "registration_request_id": {
+                "default": "",
+                "title": "Registration Request Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "title": "MailEntity",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "mail": {
+            "items": {
+              "$ref": "#/$defs/MailEntity"
+            },
+            "title": "Mail",
+            "type": "array"
+          }
+        },
+        "title": "MailList",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "list_agents",
+      "description": "List AI verification agents configured on the connected Middesk account.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          }
+        },
+        "title": "ListAgentsParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "AgentEntity": {
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "object": {
+                "default": "agent",
+                "title": "Object",
+                "type": "string"
+              },
+              "name": {
+                "default": "",
+                "title": "Name",
+                "type": "string"
+              },
+              "description": {
+                "default": "",
+                "title": "Description",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "title": "AgentEntity",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "agents": {
+            "items": {
+              "$ref": "#/$defs/AgentEntity"
+            },
+            "title": "Agents",
+            "type": "array"
+          }
+        },
+        "title": "AgentList",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "create_agent_thread",
+      "description": "Start a new conversation thread with a Middesk AI verification agent, optionally grounded on a specific Business.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "agent_id": {
+            "description": "The Middesk agent id to start a conversation thread with.",
+            "title": "Agent Id",
+            "type": "string"
+          },
+          "business_id": {
+            "default": "",
+            "description": "Optional business id to ground this thread's context in an existing verification.",
+            "title": "Business Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "agent_id"
+        ],
+        "title": "CreateAgentThreadParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "agent_id": {
+            "default": "",
+            "title": "Agent Id",
+            "type": "string"
+          },
+          "business_id": {
+            "default": "",
+            "title": "Business Id",
+            "type": "string"
+          },
+          "status": {
+            "default": "",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "AgentThreadEntity",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "get_agent_thread",
+      "description": "Read one agent conversation thread in full, including its recent runs.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "thread_id": {
+            "description": "The Middesk agent thread id to read.",
+            "title": "Thread Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "thread_id"
+        ],
+        "title": "GetAgentThreadParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "agent_id": {
+            "default": "",
+            "title": "Agent Id",
+            "type": "string"
+          },
+          "business_id": {
+            "default": "",
+            "title": "Business Id",
+            "type": "string"
+          },
+          "status": {
+            "default": "",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "AgentThreadEntity",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "run_agent",
+      "description": "Trigger a run on an agent thread with an instruction -- the agent works the verification task and may pause at an interrupt policy step for human approval.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "thread_id": {
+            "description": "The Middesk agent thread id to run.",
+            "title": "Thread Id",
+            "type": "string"
+          },
+          "instructions": {
+            "default": "",
+            "description": "Optional extra instructions for this run, e.g. what to focus verification on.",
+            "title": "Instructions",
+            "type": "string"
+          }
+        },
+        "required": [
+          "thread_id"
+        ],
+        "title": "RunAgentParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "object": {
+            "default": "run",
+            "title": "Object",
+            "type": "string"
+          },
+          "thread_id": {
+            "default": "",
+            "title": "Thread Id",
+            "type": "string"
+          },
+          "status": {
+            "default": "",
+            "title": "Status",
+            "type": "string"
+          },
+          "requires_review": {
+            "default": false,
+            "title": "Requires Review",
+            "type": "boolean"
+          },
+          "output_summary": {
+            "default": "",
+            "title": "Output Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "AgentRunEntity",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "approve_agent_run",
+      "description": "Approve or reject an agent run that is paused at a human-in-the-loop interrupt policy step, letting it proceed or stopping it.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "run_id": {
+            "description": "The Middesk agent run id that is paused awaiting human review (interrupt policy).",
+            "title": "Run Id",
+            "type": "string"
+          },
+          "approve": {
+            "default": true,
+            "description": "True to approve and let the run continue, False to reject it.",
+            "title": "Approve",
+            "type": "boolean"
+          },
+          "notes": {
+            "default": "",
+            "description": "Optional reviewer notes explaining the decision.",
+            "title": "Notes",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id"
+        ],
+        "title": "ApproveAgentRunParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "object": {
+            "default": "run",
+            "title": "Object",
+            "type": "string"
+          },
+          "thread_id": {
+            "default": "",
+            "title": "Thread Id",
+            "type": "string"
+          },
+          "status": {
+            "default": "",
+            "title": "Status",
+            "type": "string"
+          },
+          "requires_review": {
+            "default": false,
+            "title": "Requires Review",
+            "type": "boolean"
+          },
+          "output_summary": {
+            "default": "",
+            "title": "Output Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "AgentRunEntity",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "autocomplete_identity",
+      "description": "Get business-identity autocomplete suggestions for a partial name/address -- for a fast, low-friction onboarding form before a full KYB order.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "query": {
+            "description": "Partial business name or identifier to autocomplete against Middesk's identity database, e.g. 'Acme Corp Aus'.",
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "AutocompleteIdentityParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "IdentitySuggestion": {
+            "properties": {
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "tin": {
+                "default": "",
+                "title": "Tin",
+                "type": "string"
+              },
+              "address": {
+                "default": "",
+                "title": "Address",
+                "type": "string"
+              },
+              "confidence": {
+                "default": 0.0,
+                "title": "Confidence",
+                "type": "number"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "title": "IdentitySuggestion",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "suggestions": {
+            "items": {
+              "$ref": "#/$defs/IdentitySuggestion"
+            },
+            "title": "Suggestions",
+            "type": "array"
+          }
+        },
+        "title": "IdentitySuggestionList",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "smart_populate",
+      "description": "Auto-fill a full business profile from a partial input (e.g. just a name), so an onboarding form can be pre-filled before the user finishes typing.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "name": {
+            "description": "Business name to look up and auto-populate known fields for.",
+            "title": "Name",
+            "type": "string"
+          },
+          "state": {
+            "default": "",
+            "description": "Optional two-letter state code to narrow the match, e.g. 'CA'.",
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "SmartPopulateParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "tin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tin"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Website"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Address"
+          },
+          "industry": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Industry"
+          },
+          "formation_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Formation State"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "SmartPopulateResult",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "run_risk_assessment",
+      "description": "Run a standalone, fast risk assessment on a business identity without opening a full Business Order -- useful for a quick pre-screen before deciding whether to run the full KYB flow.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "business_id": {
+            "description": "The Middesk business id to run a fast risk assessment on.",
+            "title": "Business Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "business_id"
+        ],
+        "title": "RunRiskAssessmentParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "risk_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Risk Score"
+          },
+          "risk_level": {
+            "default": "",
+            "title": "Risk Level",
+            "type": "string"
+          },
+          "factors": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Factors",
+            "type": "array"
+          }
+        },
+        "required": [
+          "business_id"
+        ],
+        "title": "RiskAssessmentResult",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    },
+    {
+      "name": "audit_verification_portfolio",
+      "description": "Value-add report: scan recent Businesses in the connected Middesk account and flag ones stuck in_review, rejected, or with unresolved review tasks -- a one-glance KYB portfolio health check.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "connection_id": {
+            "default": "",
+            "description": "Which Middesk connection to use. Leave empty if you only have one.",
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "limit": {
+            "default": 50,
+            "description": "Maximum number of recent businesses to scan for the health report.",
+            "title": "Limit",
+            "type": "integer"
+          }
+        },
+        "title": "AuditVerificationPortfolioParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "total_scanned": {
+            "default": 0,
+            "title": "Total Scanned",
+            "type": "integer"
+          },
+          "approved": {
+            "default": 0,
+            "title": "Approved",
+            "type": "integer"
+          },
+          "rejected": {
+            "default": 0,
+            "title": "Rejected",
+            "type": "integer"
+          },
+          "in_review": {
+            "default": 0,
+            "title": "In Review",
+            "type": "integer"
+          },
+          "pending": {
+            "default": 0,
+            "title": "Pending",
+            "type": "integer"
+          },
+          "flagged": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Flagged",
+            "type": "array"
+          },
+          "stuck_over_7_days": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Stuck Over 7 Days",
+            "type": "array"
+          },
+          "active_monitors": {
+            "default": 0,
+            "title": "Active Monitors",
+            "type": "integer"
+          },
+          "summary": {
+            "default": "",
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "title": "PortfolioAuditResult",
+        "type": "object"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "middesk"
+    }
+  ],
+  "signals": [],
+  "schedules": [],
+  "required_scopes": [],
+  "icon_size_bytes": 288,
+  "lifecycle": {
+    "health_check": {
+      "interval_sec": 60
+    }
+  },
+  "secrets": [
+    {
+      "name": "middesk_connections",
+      "description": "Your connected Middesk accounts -- stored as a JSON array, one entry per account, each with its API key, environment (sandbox/production), and an optional label. Managed through connect_middesk / disconnect_middesk -- you should not need to edit this directly.",
+      "required": true,
+      "write_mode": "both",
+      "max_bytes": 65536,
+      "scope": "user",
+      "rotation_hint_days": 180
+    }
+  ],
+  "panels": [
+    {
+      "panel_id": "secrets",
+      "slot": "right",
+      "title": "Secrets",
+      "tree": {},
+      "icon": "KeyRound",
+      "refresh": "manual",
+      "center_overlay": false
+    },
+    {
+      "panel_id": "middesk_connect",
+      "slot": "left",
+      "title": "Middesk",
+      "tree": {},
+      "icon": "🛡️",
+      "refresh": "manual",
+      "center_overlay": false,
+      "default_width": 340,
+      "min_width": 280,
+      "max_width": 440
+    },
+    {
+      "panel_id": "middesk_connect_help",
+      "slot": "center",
+      "title": "How to connect Middesk",
+      "tree": {},
+      "icon": "",
+      "refresh": "manual",
+      "center_overlay": true
+    },
+    {
+      "panel_id": "middesk_center",
+      "slot": "center",
+      "title": "Middesk",
+      "tree": {},
+      "icon": "🛡️",
+      "refresh": "manual",
+      "center_overlay": true
+    },
+    {
+      "panel_id": "middesk_settings",
+      "slot": "center",
+      "title": "",
+      "tree": {},
+      "icon": "",
+      "refresh": "manual",
+      "center_overlay": false
+    }
+  ]
+}
