@@ -34,6 +34,9 @@ def _monitor_from_body(body: dict) -> MonitorEntity:
 @chat.function(
     name="create_monitor",
     description="Subscribe a Business to ongoing monitoring -- Middesk continuously re-checks it for SOS deactivation, new watchlist/sanctions hits, and officer/registration changes after initial approval.",
+    action_type="write",
+    effects=["create:monitor"],
+    event="middesk-connector.create_monitor",
 )
 async def create_monitor(ctx, params: CreateMonitorParams) -> ActionResult[MonitorEntity]:
     """Subscribe a Business to ongoing monitoring -- Middesk continuously re-checks it for SOS deactivation, new watchlist/sanctions hits, and officer/registration changes after initial approval."""

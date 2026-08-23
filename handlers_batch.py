@@ -30,6 +30,9 @@ async def _conn_or_error(ctx, connection_id: str):
 @chat.function(
     name="create_business_batch",
     description="Submit several businesses to Middesk in one call (e.g. bulk-onboarding a portfolio of vendors), optionally kicking off the same verification products for every one of them.",
+    action_type="write",
+    effects=["create:business_batch"],
+    event="middesk-connector.create_business_batch",
 )
 async def create_business_batch(ctx, params: CreateBusinessBatchParams) -> ActionResult[BatchEntity]:
     """Submit several businesses to Middesk in one call (e.g. bulk-onboarding a portfolio of vendors), optionally kicking off the same verification products for every one of them."""
@@ -126,6 +129,9 @@ async def list_policy_results(ctx, params: ListPolicyResultsParams) -> ActionRes
 @chat.function(
     name="create_action",
     description="Manually trigger a Middesk action against a Business (e.g. force a re-verification) instead of waiting for scheduled monitoring.",
+    action_type="write",
+    effects=["create:action"],
+    event="middesk-connector.create_action",
 )
 async def create_action(ctx, params: CreateActionParams) -> ActionResult[ActionTriggerResult]:
     """Trigger a manual verification action (e.g. reverify) against a Business."""

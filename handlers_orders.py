@@ -39,6 +39,9 @@ def _order_from_body(body: dict) -> OrderEntity:
 @chat.function(
     name="create_order",
     description="Order one or more verification products (e.g. identity, tin, watchlist, industry_classification, web_presence, risk) against an existing Business.",
+    action_type="write",
+    effects=["create:order"],
+    event="middesk-connector.create_order",
 )
 async def create_order(ctx, params: CreateOrderParams) -> ActionResult[OrderEntity]:
     """Order one or more verification products (e.g. identity, tin, watchlist, industry_classification, web_presence, risk) against an existing Business."""

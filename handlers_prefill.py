@@ -49,6 +49,9 @@ async def autocomplete_identity(ctx, params: AutocompleteIdentityParams) -> Acti
 @chat.function(
     name="smart_populate",
     description="Auto-fill a full business profile from a partial input (e.g. just a name), so an onboarding form can be pre-filled before the user finishes typing.",
+    action_type="write",
+    effects=["create:prefill_result"],
+    event="middesk-connector.smart_populate",
 )
 async def smart_populate(ctx, params: SmartPopulateParams) -> ActionResult[SmartPopulateResult]:
     """Auto-fill a full business profile from a partial input (e.g. just a name), so an onboarding form can be pre-filled before the user finishes typing."""
@@ -73,6 +76,9 @@ async def smart_populate(ctx, params: SmartPopulateParams) -> ActionResult[Smart
 @chat.function(
     name="run_risk_assessment",
     description="Run a standalone, fast risk assessment on a business identity without opening a full Business Order -- useful for a quick pre-screen before deciding whether to run the full KYB flow.",
+    action_type="write",
+    effects=["create:risk_assessment"],
+    event="middesk-connector.run_risk_assessment",
 )
 async def run_risk_assessment(ctx, params: RunRiskAssessmentParams) -> ActionResult[RiskAssessmentResult]:
     """Run a standalone, fast risk assessment on a business identity without opening a full Business Order -- useful for a quick pre-screen before deciding whether to run the full KYB flow."""

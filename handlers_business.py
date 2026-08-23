@@ -42,6 +42,9 @@ def _business_from_body(body: dict) -> BusinessEntity:
 @chat.function(
     name="create_business",
     description="Create a new Business in Middesk to start KYB verification -- name plus optional TIN/address/website, and optionally kick off verification products (orders) immediately.",
+    action_type="write",
+    effects=["create:business"],
+    event="middesk-connector.create_business",
 )
 async def create_business(ctx, params: CreateBusinessParams) -> ActionResult[BusinessEntity]:
     """Create a new Business in Middesk to start KYB verification -- name plus optional TIN/address/website, and optionally kick off verification products (orders) immediately."""
@@ -75,6 +78,9 @@ async def create_business(ctx, params: CreateBusinessParams) -> ActionResult[Bus
 @chat.function(
     name="update_business",
     description="Update selected fields of an existing Business (name/TIN/external_id/tags). Only given fields change.",
+    action_type="write",
+    effects=["update:business"],
+    event="middesk-connector.update_business",
 )
 async def update_business(ctx, params: UpdateBusinessParams) -> ActionResult[BusinessEntity]:
     """Update selected fields of an existing Business (name/TIN/external_id/tags). Only given fields change."""

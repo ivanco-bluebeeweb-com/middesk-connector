@@ -107,6 +107,9 @@ async def connect_middesk(ctx, params: ConnectMiddeskParams) -> ActionResult[Mid
 @chat.function(
     name="disconnect_middesk",
     description="Disconnect a Middesk account: deletes the saved API key. Nothing in Middesk itself is changed.",
+    action_type="write",
+    effects=["delete:connection"],
+    event="middesk-connector.disconnect_middesk",
 )
 async def disconnect_middesk(ctx, params: DisconnectMiddeskParams) -> ActionResult[DeleteResult]:
     """Disconnect a Middesk account: deletes the saved API key. Nothing in Middesk itself is changed."""

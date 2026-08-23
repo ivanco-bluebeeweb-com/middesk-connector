@@ -2,7 +2,7 @@
   "manifest_schema_version": 3,
   "sdk_version": "5.9.12",
   "app_id": "middesk-connector",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "name": "Middesk",
   "description": "Connect your own Middesk account to run KYB (Know Your Business) verification end to end: create Businesses and Orders (identity, TIN, watchlist/sanctions, industry classification, web presence, risk), read Review/Review Tasks, timeline, signals, liens, Secretary of State registrations, TIN match, websites, and documents, set up ongoing Monitors and Monitor Events, register webhooks, run Entity Management payroll-tax registrations, and drive Middesk's AI verification Agents. Uses your own Middesk API key -- nothing is hosted or proxied by Imperal beyond the request itself.",
   "icon": "icon.svg",
@@ -93,9 +93,11 @@
     {
       "name": "disconnect_middesk",
       "description": "Disconnect a Middesk account: deletes the saved API key. Nothing in Middesk itself is changed.",
-      "action_type": "read",
+      "action_type": "write",
       "chain_callable": true,
-      "effects": [],
+      "effects": [
+        "delete:connection"
+      ],
       "id_projection": "",
       "params_schema": {
         "properties": {
@@ -127,7 +129,7 @@
         "title": "DeleteResult",
         "type": "object"
       },
-      "event": "",
+      "event": "middesk-connector.disconnect_middesk",
       "background": false,
       "long_running": false,
       "scopes": [],
@@ -208,9 +210,11 @@
     {
       "name": "create_business",
       "description": "Create a new Business in Middesk to start KYB verification -- name plus optional TIN/address/website, and optionally kick off verification products (orders) immediately.",
-      "action_type": "read",
+      "action_type": "write",
       "chain_callable": true,
-      "effects": [],
+      "effects": [
+        "create:business"
+      ],
       "id_projection": "",
       "params_schema": {
         "properties": {
@@ -355,7 +359,7 @@
         "title": "BusinessEntity",
         "type": "object"
       },
-      "event": "",
+      "event": "middesk-connector.create_business",
       "background": false,
       "long_running": false,
       "scopes": [],
@@ -364,9 +368,11 @@
     {
       "name": "update_business",
       "description": "Update selected fields of an existing Business (name/TIN/external_id/tags). Only given fields change.",
-      "action_type": "read",
+      "action_type": "write",
       "chain_callable": true,
-      "effects": [],
+      "effects": [
+        "update:business"
+      ],
       "id_projection": "",
       "params_schema": {
         "properties": {
@@ -505,7 +511,7 @@
         "title": "BusinessEntity",
         "type": "object"
       },
-      "event": "",
+      "event": "middesk-connector.update_business",
       "background": false,
       "long_running": false,
       "scopes": [],
@@ -866,9 +872,11 @@
     {
       "name": "create_order",
       "description": "Order one or more verification products (e.g. identity, tin, watchlist, industry_classification, web_presence, risk) against an existing Business.",
-      "action_type": "read",
+      "action_type": "write",
       "chain_callable": true,
-      "effects": [],
+      "effects": [
+        "create:order"
+      ],
       "id_projection": "",
       "params_schema": {
         "properties": {
@@ -941,7 +949,7 @@
         "title": "OrderEntity",
         "type": "object"
       },
-      "event": "",
+      "event": "middesk-connector.create_order",
       "background": false,
       "long_running": false,
       "scopes": [],
@@ -1301,9 +1309,11 @@
     {
       "name": "create_monitor",
       "description": "Subscribe a Business to ongoing monitoring -- Middesk continuously re-checks it for SOS deactivation, new watchlist/sanctions hits, and officer/registration changes after initial approval.",
-      "action_type": "read",
+      "action_type": "write",
       "chain_callable": true,
-      "effects": [],
+      "effects": [
+        "create:monitor"
+      ],
       "id_projection": "",
       "params_schema": {
         "properties": {
@@ -1363,7 +1373,7 @@
         "title": "MonitorEntity",
         "type": "object"
       },
-      "event": "",
+      "event": "middesk-connector.create_monitor",
       "background": false,
       "long_running": false,
       "scopes": [],
@@ -1982,9 +1992,11 @@
     {
       "name": "create_business_batch",
       "description": "Submit several businesses to Middesk in one call (e.g. bulk-onboarding a portfolio of vendors), optionally kicking off the same verification products for every one of them.",
-      "action_type": "read",
+      "action_type": "write",
       "chain_callable": true,
-      "effects": [],
+      "effects": [
+        "create:business_batch"
+      ],
       "id_projection": "",
       "params_schema": {
         "properties": {
@@ -2047,7 +2059,7 @@
         "title": "BatchEntity",
         "type": "object"
       },
-      "event": "",
+      "event": "middesk-connector.create_business_batch",
       "background": false,
       "long_running": false,
       "scopes": [],
@@ -2291,9 +2303,11 @@
     {
       "name": "create_action",
       "description": "Manually trigger a Middesk action against a Business (e.g. force a re-verification) instead of waiting for scheduled monitoring.",
-      "action_type": "read",
+      "action_type": "write",
       "chain_callable": true,
-      "effects": [],
+      "effects": [
+        "create:action"
+      ],
       "id_projection": "",
       "params_schema": {
         "properties": {
@@ -2344,7 +2358,7 @@
         "title": "ActionTriggerResult",
         "type": "object"
       },
-      "event": "",
+      "event": "middesk-connector.create_action",
       "background": false,
       "long_running": false,
       "scopes": [],
@@ -2353,9 +2367,11 @@
     {
       "name": "create_webhook",
       "description": "Register a new webhook endpoint so Middesk pushes verification lifecycle events (business updates, review completion, monitor hits) to your URL as they happen.",
-      "action_type": "read",
+      "action_type": "write",
       "chain_callable": true,
-      "effects": [],
+      "effects": [
+        "create:webhook"
+      ],
       "id_projection": "",
       "params_schema": {
         "properties": {
@@ -2423,7 +2439,7 @@
         "title": "WebhookEntity",
         "type": "object"
       },
-      "event": "",
+      "event": "middesk-connector.create_webhook",
       "background": false,
       "long_running": false,
       "scopes": [],
@@ -2585,9 +2601,11 @@
     {
       "name": "update_webhook",
       "description": "Change an existing webhook's URL and/or subscribed event types. Only given fields change.",
-      "action_type": "read",
+      "action_type": "write",
       "chain_callable": true,
-      "effects": [],
+      "effects": [
+        "update:webhook"
+      ],
       "id_projection": "",
       "params_schema": {
         "properties": {
@@ -2661,7 +2679,7 @@
         "title": "WebhookEntity",
         "type": "object"
       },
-      "event": "",
+      "event": "middesk-connector.update_webhook",
       "background": false,
       "long_running": false,
       "scopes": [],
@@ -2723,9 +2741,11 @@
     {
       "name": "create_registration_request",
       "description": "Create a payroll-tax Registration Request for a company in one or more jurisdictions (Entity Management -- separate from KYB Business Verification).",
-      "action_type": "read",
+      "action_type": "write",
       "chain_callable": true,
-      "effects": [],
+      "effects": [
+        "create:registration_request"
+      ],
       "id_projection": "",
       "params_schema": {
         "properties": {
@@ -2799,7 +2819,7 @@
         "title": "RegistrationRequestEntity",
         "type": "object"
       },
-      "event": "",
+      "event": "middesk-connector.create_registration_request",
       "background": false,
       "long_running": false,
       "scopes": [],
@@ -3045,9 +3065,11 @@
     {
       "name": "answer_information_request",
       "description": "Submit answers to an open Information Request so Middesk can continue filing the payroll-tax registration.",
-      "action_type": "read",
+      "action_type": "write",
       "chain_callable": true,
-      "effects": [],
+      "effects": [
+        "update:information_request"
+      ],
       "id_projection": "",
       "params_schema": {
         "properties": {
@@ -3093,7 +3115,7 @@
         "title": "InformationRequestAnswerResult",
         "type": "object"
       },
-      "event": "",
+      "event": "middesk-connector.answer_information_request",
       "background": false,
       "long_running": false,
       "scopes": [],
@@ -3312,9 +3334,11 @@
     {
       "name": "create_agent_thread",
       "description": "Start a new conversation thread with a Middesk AI verification agent, optionally grounded on a specific Business.",
-      "action_type": "read",
+      "action_type": "write",
       "chain_callable": true,
-      "effects": [],
+      "effects": [
+        "create:agent_thread"
+      ],
       "id_projection": "",
       "params_schema": {
         "properties": {
@@ -3370,7 +3394,7 @@
         "title": "AgentThreadEntity",
         "type": "object"
       },
-      "event": "",
+      "event": "middesk-connector.create_agent_thread",
       "background": false,
       "long_running": false,
       "scopes": [],
@@ -3440,9 +3464,11 @@
     {
       "name": "run_agent",
       "description": "Trigger a run on an agent thread with an instruction -- the agent works the verification task and may pause at an interrupt policy step for human approval.",
-      "action_type": "read",
+      "action_type": "write",
       "chain_callable": true,
-      "effects": [],
+      "effects": [
+        "create:agent_run"
+      ],
       "id_projection": "",
       "params_schema": {
         "properties": {
@@ -3508,7 +3534,7 @@
         "title": "AgentRunEntity",
         "type": "object"
       },
-      "event": "",
+      "event": "middesk-connector.run_agent",
       "background": false,
       "long_running": false,
       "scopes": [],
@@ -3517,9 +3543,11 @@
     {
       "name": "approve_agent_run",
       "description": "Approve or reject an agent run that is paused at a human-in-the-loop interrupt policy step, letting it proceed or stopping it.",
-      "action_type": "read",
+      "action_type": "write",
       "chain_callable": true,
-      "effects": [],
+      "effects": [
+        "update:agent_run"
+      ],
       "id_projection": "",
       "params_schema": {
         "properties": {
@@ -3591,7 +3619,7 @@
         "title": "AgentRunEntity",
         "type": "object"
       },
-      "event": "",
+      "event": "middesk-connector.approve_agent_run",
       "background": false,
       "long_running": false,
       "scopes": [],
@@ -3676,9 +3704,11 @@
     {
       "name": "smart_populate",
       "description": "Auto-fill a full business profile from a partial input (e.g. just a name), so an onboarding form can be pre-filled before the user finishes typing.",
-      "action_type": "read",
+      "action_type": "write",
       "chain_callable": true,
-      "effects": [],
+      "effects": [
+        "create:prefill_result"
+      ],
       "id_projection": "",
       "params_schema": {
         "properties": {
@@ -3779,7 +3809,7 @@
         "title": "SmartPopulateResult",
         "type": "object"
       },
-      "event": "",
+      "event": "middesk-connector.smart_populate",
       "background": false,
       "long_running": false,
       "scopes": [],
@@ -3788,9 +3818,11 @@
     {
       "name": "run_risk_assessment",
       "description": "Run a standalone, fast risk assessment on a business identity without opening a full Business Order -- useful for a quick pre-screen before deciding whether to run the full KYB flow.",
-      "action_type": "read",
+      "action_type": "write",
       "chain_callable": true,
-      "effects": [],
+      "effects": [
+        "create:risk_assessment"
+      ],
       "id_projection": "",
       "params_schema": {
         "properties": {
@@ -3849,7 +3881,7 @@
         "title": "RiskAssessmentResult",
         "type": "object"
       },
-      "event": "",
+      "event": "middesk-connector.run_risk_assessment",
       "background": false,
       "long_running": false,
       "scopes": [],

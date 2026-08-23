@@ -43,6 +43,9 @@ def _reg_request_from_body(body: dict) -> RegistrationRequestEntity:
 @chat.function(
     name="create_registration_request",
     description="Create a payroll-tax Registration Request for a company in one or more jurisdictions (Entity Management -- separate from KYB Business Verification).",
+    action_type="write",
+    effects=["create:registration_request"],
+    event="middesk-connector.create_registration_request",
 )
 async def create_registration_request(ctx, params: CreateRegistrationRequestParams) -> ActionResult[RegistrationRequestEntity]:
     """Create a payroll-tax Registration Request for a company in one or more jurisdictions (Entity Management -- separate from KYB Business Verification)."""
@@ -122,6 +125,9 @@ async def list_information_requests(ctx, params: ListInformationRequestsParams) 
 @chat.function(
     name="answer_information_request",
     description="Submit answers to an open Information Request so Middesk can continue filing the payroll-tax registration.",
+    action_type="write",
+    effects=["update:information_request"],
+    event="middesk-connector.answer_information_request",
 )
 async def answer_information_request(ctx, params: AnswerInformationRequestParams) -> ActionResult[InformationRequestAnswerResult]:
     """Submit answers to an open payroll-tax registration Information Request."""

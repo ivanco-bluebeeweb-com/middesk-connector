@@ -48,7 +48,7 @@ from imperal_sdk import ChatExtension, Extension
 
 ext = Extension(
     "middesk-connector",
-    version="0.1.0",
+    version="1.0.0",
     display_name="Middesk",
     description=(
         "Connect your own Middesk account to run KYB (Know Your Business) "

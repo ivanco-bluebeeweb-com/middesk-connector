@@ -38,6 +38,9 @@ def _webhook_from_body(body: dict) -> WebhookEntity:
 @chat.function(
     name="create_webhook",
     description="Register a new webhook endpoint so Middesk pushes verification lifecycle events (business updates, review completion, monitor hits) to your URL as they happen.",
+    action_type="write",
+    effects=["create:webhook"],
+    event="middesk-connector.create_webhook",
 )
 async def create_webhook(ctx, params: CreateWebhookParams) -> ActionResult[WebhookEntity]:
     """Register a new webhook endpoint so Middesk pushes verification lifecycle events (business updates, review completion, monitor hits) to your URL as they happen."""
@@ -94,6 +97,9 @@ async def list_webhooks(ctx, params: ListWebhooksParams) -> ActionResult[Webhook
 @chat.function(
     name="update_webhook",
     description="Change an existing webhook's URL and/or subscribed event types. Only given fields change.",
+    action_type="write",
+    effects=["update:webhook"],
+    event="middesk-connector.update_webhook",
 )
 async def update_webhook(ctx, params: UpdateWebhookParams) -> ActionResult[WebhookEntity]:
     """Change an existing webhook's URL and/or subscribed event types. Only given fields change."""

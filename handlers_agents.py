@@ -44,6 +44,9 @@ async def list_agents(ctx, params: ListAgentsParams) -> ActionResult[AgentList]:
 @chat.function(
     name="create_agent_thread",
     description="Start a new conversation thread with a Middesk AI verification agent, optionally grounded on a specific Business.",
+    action_type="write",
+    effects=["create:agent_thread"],
+    event="middesk-connector.create_agent_thread",
 )
 async def create_agent_thread(ctx, params: CreateAgentThreadParams) -> ActionResult[AgentThreadEntity]:
     """Start a new conversation thread with a Middesk AI verification agent."""
@@ -90,6 +93,9 @@ async def get_agent_thread(ctx, params: GetAgentThreadParams) -> ActionResult[Ag
 @chat.function(
     name="run_agent",
     description="Trigger a run on an agent thread with an instruction -- the agent works the verification task and may pause at an interrupt policy step for human approval.",
+    action_type="write",
+    effects=["create:agent_run"],
+    event="middesk-connector.run_agent",
 )
 async def run_agent(ctx, params: RunAgentParams) -> ActionResult[AgentRunEntity]:
     """Trigger a run on an agent thread with an instruction -- the agent works the verification task and may pause at an interrupt policy step for human approval."""
@@ -112,6 +118,9 @@ async def run_agent(ctx, params: RunAgentParams) -> ActionResult[AgentRunEntity]
 @chat.function(
     name="approve_agent_run",
     description="Approve or reject an agent run that is paused at a human-in-the-loop interrupt policy step, letting it proceed or stopping it.",
+    action_type="write",
+    effects=["update:agent_run"],
+    event="middesk-connector.approve_agent_run",
 )
 async def approve_agent_run(ctx, params: ApproveAgentRunParams) -> ActionResult[AgentRunEntity]:
     """Approve or reject an agent run that is paused at a human-in-the-loop interrupt policy step, letting it proceed or stopping it."""
