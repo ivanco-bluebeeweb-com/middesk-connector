@@ -119,6 +119,9 @@ async def middesk_connect_panel(ctx, **kwargs) -> object:
         ui.Text("Connected accounts", variant="subtitle"),
         _connections_section(connections),
         ui.Divider(),
+        ui.Button("View verification portfolio", variant="primary", size="sm", full_width=True,
+                  icon="ShieldCheck", on_click=ui.Call("__panel__middesk_center")),
+        ui.Divider(),
         _connect_section(),
         ui.Divider(),
         _settings_button(),
@@ -169,7 +172,32 @@ async def middesk_center_panel(ctx, **kwargs) -> object:
     slot="center" panel is registered but the Panel app never fetches it
     at session-init without that flag. Text is the shared canonical
     wording -- must stay identical across every app in this situation."""
-    return ui.Empty(
-        message="Nothing to show here -- this app is managed entirely from the sidebar.",
-        icon="👈",
-    )
+    connections = await h._load_connections(ctx)
+    if not connections:
+        return ui.Empty(message="Connect a Middesk account from the sidebar to see it here.", icon="🛡️")
+
+    import handlers_audit as ha
+    from schemas import AuditVerificationPortfolioParams
+    conn_id = connections[0].get("id", "")
+    result = await ha.audit_verification_portfolio(ctx, AuditVerificationPortfolioParams(connection_id=conn_id))
+    body: list[ui.UINode] = [ui.Text("Verification portfolio", variant="subtitle")]
+    if result.success and result.data:
+        r = result.data
+        body.append(ui.Stats(children=[
+            ui.Stat(label="Scanned", value=str(r.total_scanned)),
+            ui.Stat(label="Approved", value=str(r.approved)),
+            ui.Stat(label="Rejected", value=str(r.rejected)),
+            ui.Stat(label="In review", value=str(r.in_review)),
+        ]))
+        body.append(ui.KeyValue(columns=2, items=[
+            {"key": "Pending", "value": str(r.pending)},
+            {"key": "Active monitors", "value": str(r.active_monitors)},
+            {"key": "Stuck >7d", "value": str(len(r.stuck_over_7_days))},
+        ]))
+        if r.summary:
+            body.append(ui.Divider())
+            body.append(ui.Text(r.summary, variant="body"))
+    else:
+        body.append(ui.Text("Could not load the verification portfolio audit.", variant="caption"))
+
+    return ui.Stack(direction="v", gap=3, align="stretch", children=body)
