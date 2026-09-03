@@ -32,8 +32,7 @@ def _settings_button() -> ui.UINode:
     """The one required secondary entry point into the settings screen --
     always the last element at the bottom of the sidebar."""
     return ui.Button(
-        "App settings", variant="secondary", size="sm", full_width=True,
-        icon="settings", on_click=ui.Call("__panel__middesk_settings"),
+        "App settings", variant="secondary", size="sm", icon="settings", on_click=ui.Call("__panel__middesk_settings"),
     )
 
 
@@ -69,6 +68,9 @@ def _connect_section() -> ui.UINode:
         ui.Button("How do I set this up?", variant="ghost", size="sm",
                   icon="HelpCircle",
                   on_click=ui.Call("__panel__middesk_connect_help")),
+        ui.Button("Sign in with Middesk (OAuth 2.0)", variant="primary", size="sm", icon="login"),
+        ui.Divider(),
+        ui.Text("Or connect via API Key", variant="caption"),
         ui.Form(
             action="connect_middesk",
             submit_label="Verify and connect",
@@ -119,8 +121,7 @@ async def middesk_connect_panel(ctx, **kwargs) -> object:
         ui.Text("Connected accounts", variant="subtitle"),
         _connections_section(connections),
         ui.Divider(),
-        ui.Button("View verification portfolio", variant="primary", size="sm", full_width=True,
-                  icon="ShieldCheck", on_click=ui.Call("__panel__middesk_center")),
+        ui.Button("View verification portfolio", variant="primary", size="sm", icon="ShieldCheck", on_click=ui.Call("__panel__middesk_center")),
         ui.Divider(),
         _connect_section(),
         ui.Divider(),
